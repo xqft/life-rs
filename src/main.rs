@@ -4,6 +4,8 @@ use macroquad::prelude::*;
 #[macroquad::main("life")]
 async fn main() {
     let mut grid = Grid::new(10, 10);
+
+    // blinker: 
     grid.cells[0][3] = Cell::Alive;
     grid.cells[1][3] = Cell::Alive;
     grid.cells[2][3] = Cell::Alive;

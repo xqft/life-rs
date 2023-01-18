@@ -1,11 +1,13 @@
 use std::cmp;
 
+#[derive(Debug)]
 #[derive(Copy, Clone, PartialEq)]
 pub enum Cell {
     Dead,
     Alive
 }
 
+#[derive(Debug)]
 pub struct Grid {
     width: usize,
     height: usize,
@@ -26,16 +28,12 @@ impl Grid {
 
         for (i, row) in self.cells.iter().enumerate() {
             for (j, cell) in row.iter().enumerate() {
-                match cell {
-                    Cell::Dead => if self.live_neighbours(i, j) == 3 {
-                        new.cells[i][j] = Cell::Alive
-                    },
-                    Cell::Alive => match self.live_neighbours(i, j) {
-                        0 | 1 => new.cells[i][j] = Cell::Dead,
-                        3.. => new.cells[i][j] = Cell::Dead,
-                        _ => () // cell lives
-                    }
-                }
+                new.cells[i][j] = match (cell, self.live_neighbours(i, j)) {
+                    (Cell::Alive, 0 | 1)    => Cell::Dead,
+                    (Cell::Alive, 4..)      => Cell::Dead,
+                    (Cell::Dead, 3)         => Cell::Alive,
+                    (other, _)              => *other, // stays the same
+                };
             }
         } 
 
@@ -59,10 +57,11 @@ impl Grid {
         result
     }
 
-    fn live_neighbours(&self, row: usize, col: usize) -> usize {
+    pub fn live_neighbours(&self, row: usize, col: usize) -> usize {
         self.get_neighbours(row, col)
             .iter()
             .filter(|cell| **cell == Cell::Alive)
             .count()
+            - if self.cells[row][col] == Cell::Alive { 1 } else { 0 } // so it doesn't count itself.
     }
 }
