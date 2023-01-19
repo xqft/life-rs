@@ -1,16 +1,14 @@
 use std::cmp;
 
-#[derive(Debug)]
 #[derive(Copy, Clone, PartialEq)]
 pub enum Cell {
     Dead,
     Alive
 }
 
-#[derive(Debug)]
 pub struct Grid {
-    width: usize,
-    height: usize,
+    pub width: usize,
+    pub height: usize,
     pub cells: Vec<Vec<Cell>>
 }
 

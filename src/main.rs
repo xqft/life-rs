@@ -1,24 +1,34 @@
-use life_rs::data::{Grid, Cell};
+use life_rs::game::{Grid, Cell};
 use macroquad::prelude::*;
 
 #[macroquad::main("life")]
 async fn main() {
-    let mut grid = Grid::new(10, 10);
+    let mut grid = Grid::new(100, 100);
 
-    // blinker: 
-    grid.cells[0][3] = Cell::Alive;
-    grid.cells[1][3] = Cell::Alive;
-    grid.cells[2][3] = Cell::Alive;
+    // glider: 
+    grid.cells[0][2] = Cell::Alive;
+    grid.cells[1][0] = Cell::Alive;
+    grid.cells[1][2] = Cell::Alive;
+    grid.cells[2][1] = Cell::Alive;
+    grid.cells[2][2] = Cell::Alive;
+    // the grid's origin is at the top-left corner of the screen.
 
-    let grid = grid.tick();
+    let tps = 10.0;             // ticks per second.
+    let mut spent_time = 0.0;   // time spent since last tick.
+    let mut zoom = 1.0 / 30.0;  // 30 cells enter in a screen width by def.
 
-    assert_eq!(grid.cells[0][3], Cell::Dead);
-    assert_eq!(grid.cells[2][3], Cell::Dead);
-    assert_eq!(grid.cells[1][2], Cell::Alive);
-    assert_eq!(grid.cells[1][4], Cell::Alive);
+    loop {
+        clear_background(BLACK);
 
-    //loop {
-    //    clear_background(WHITE);
-    //    next_frame().await
-    //}
+        if spent_time >= 1. / tps {
+            grid = grid.tick();
+            spent_time = 0.0;
+        }
+        spent_time += get_frame_time();
+
+        grid.render(zoom);
+        zoom += (mouse_wheel().1 * get_frame_time()) / 30.;
+
+        next_frame().await
+    }
 }
