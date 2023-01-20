@@ -1,9 +1,8 @@
-use std::cmp;
-
+#[repr(u8)]
 #[derive(Copy, Clone, PartialEq)]
 pub enum Cell {
-    Dead,
-    Alive
+    Dead = 0,
+    Alive = 1
 }
 
 pub struct Position {
@@ -16,6 +15,17 @@ pub struct Grid {
     pub height: usize,
     pub cells: Vec<Vec<Cell>>
 }
+
+pub struct Neighbourhood<'a> {
+    grid: &'a Grid,
+    current_idx: usize,
+    center: Position
+}
+// every neighbour has its own index, from 0 to 8.
+// [0][1][2]
+// [3][4][5]
+// [6][7][8]
+// 4th index corresponds to the center, so it needs to be skiped.
 
 impl Grid {
     pub fn new(width: usize, height: usize) -> Grid {
@@ -31,7 +41,7 @@ impl Grid {
 
         for (i, row) in self.cells.iter().enumerate() {
             for (j, cell) in row.iter().enumerate() {
-                new.cells[i][j] = match (cell, self.live_neighbours(Position {row: i, col: j})) {
+                new.cells[i][j] = match (cell, self.get_alive_count(Position {row: i, col: j})) {
                     (Cell::Alive, 0 | 1)    => Cell::Dead,
                     (Cell::Alive, 4..)      => Cell::Dead,
                     (Cell::Dead, 3)         => Cell::Alive,
@@ -43,28 +53,36 @@ impl Grid {
         new
     }
 
-    fn get_neighbours(&self, pos: Position) -> Vec<Cell> {
-        let mut result = Vec::new();
-
-        let imin = pos.row.checked_sub(1).unwrap_or(0);
-        let imax = cmp::min(self.height - 1, pos.row + 1);
-        let jmin = pos.col.checked_sub(1).unwrap_or(0);
-        let jmax = cmp::min(self.width - 1, pos.col + 1);
-
-        for i in imin..=imax {
-            for j in jmin..=jmax {
-                result.push(self.cells[i][j])
-            }
-        }
-
-        result
+    fn get_neighbourhood(&self, center: Position) -> Neighbourhood {
+        Neighbourhood { grid: &self, current_idx: 0, center }
     }
 
-    pub fn live_neighbours(&self, pos: Position) -> usize {
-        self.get_neighbours(pos)
-            .iter()
-            .filter(|cell| **cell == Cell::Alive)
-            .count()
-            - if self.cells[pos.row][pos.col] == Cell::Alive { 1 } else { 0 } // so it doesn't count itself.
+    fn get_alive_count(&self, center: Position) -> u8 {
+        self.get_neighbourhood(center).into_iter().sum()
+    }
+}
+
+impl<'a> Iterator for Neighbourhood<'a> {
+    type Item = u8;
+
+    fn next(&mut self) -> Option<Self::Item> {
+       match self.current_idx {
+            4 => { // 4th index corresponds to the center, which isn't a neighbour.
+                self.current_idx += 1;
+                self.next()
+            },
+            0..=8 => {
+                let row = (self.center.row + self.grid.height - 1 + self.current_idx / 3) % self.grid.height;
+                let col = (self.center.col + self.grid.width  - 1 + self.current_idx % 3) % self.grid.width;
+                //         ^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^  ^^^   ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+                //        starts in center   avoids negatives  |     neighbour offset    wraps around the grid
+                //                                    upper-left corners
+
+                self.current_idx += 1;
+
+                Some(self.grid.cells[row][col] as u8) 
+            },
+            _ => None
+        } 
     }
 }
