@@ -5,16 +5,15 @@ impl Grid {
     pub fn render(&self, zoom: f32) {
         let square_length = screen_width() * zoom;
 
-        for (i, row) in self.cells.iter().enumerate() {
-            for (j, cell) in row.iter().enumerate() {
-                if *cell == Cell::Alive {
-                    draw_rectangle(
-                        i as f32 * square_length,
-                        j as f32 * square_length,
-                        square_length,
-                        square_length, 
-                        WHITE)     
-                }
+        for (idx, cell) in self.cells.iter().enumerate() {
+            let pos = self.get_pos(idx);
+            if *cell == Cell::Alive {
+                draw_rectangle(
+                    pos.row as f32 * square_length,
+                    pos.col as f32 * square_length,
+                    square_length,
+                    square_length, 
+                    WHITE)     
             }
         }
     }

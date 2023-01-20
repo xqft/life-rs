@@ -1,4 +1,4 @@
-use life_rs::game::{Grid, Cell};
+use life_rs::game::{Grid, Cell, Position};
 use macroquad::prelude::*;
 
 #[macroquad::main("life")]
@@ -6,11 +6,18 @@ async fn main() {
     let mut grid = Grid::new(100, 100);
 
     // glider: 
-    grid.cells[0][2] = Cell::Alive;
-    grid.cells[1][0] = Cell::Alive;
-    grid.cells[1][2] = Cell::Alive;
-    grid.cells[2][1] = Cell::Alive;
-    grid.cells[2][2] = Cell::Alive;
+    let positions = [
+        Position { row: 0, col: 2},
+        Position { row: 1, col: 0},
+        Position { row: 1, col: 2},
+        Position { row: 2, col: 1},
+        Position { row: 2, col: 2}
+    ];
+
+    for pos in positions {
+        let idx = grid.get_idx(pos);
+        grid.cells[idx] = Cell::Alive;
+    }
     // the grid's origin is at the top-left corner of the screen.
 
     let tps = 10.0;             // ticks per second.
